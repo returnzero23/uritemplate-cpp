@@ -1,0 +1,1 @@
+./build/test "./ext/uritemplate-test/spec-examples.json"
