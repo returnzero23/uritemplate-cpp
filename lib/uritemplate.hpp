@@ -1,3 +1,6 @@
+#ifndef URITEMPLATECPP_H
+#define URITEMPLATECPP_H
+
 #include <string>
 #include <vector>
 #include <map>
@@ -39,10 +42,17 @@ private:
 };
 
 class UriTemplate{
+public:
+	UriTemplate(std::string Template){
+	};
+
+	std::string expand(std::map<std::string,std::string> vars){
+		return std::string();
+	}
+private:
     std::vector<TemplateComponent> components;
     std::map<std::string,TemplateVar> vars;
 };
 
-
-
 }//uritemplatecpp end 
+#endif //URITEMPLATECPP_H end
