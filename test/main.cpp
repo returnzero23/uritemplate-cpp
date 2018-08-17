@@ -7,6 +7,7 @@
 
 using json = nlohmann::json;
 using std::string;
+using UriTemplate = uritemplatecpp::UriTemplate;
 
 struct LevelTestCase{
 	uint level;
@@ -15,24 +16,34 @@ struct LevelTestCase{
 };
 
 bool parseTestCase(const json& parseJson, LevelTestCase& result){
-	result.level = parseJson["level"];
 	
-	json Jvariables = parseJson["variables"];
-	for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
+	try
 	{
-		result.variables.insert(it.key(),it.value().get<string>());
-	}
+		result.level = parseJson["level"];
 
-	json JtestCases = parseJson["testcases"];
-	for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
-	{
-		result.testcases.push_back(std::pair<string,string>(it[0].get<string>(),it[1].get<string>()));
+		json Jvariables = parseJson["variables"];
+		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
+		{
+			result.variables.insert(std::pair<string,string>(it.key(),it.value().get<string>()));
+		}
+
+		json JtestCases = parseJson["testcases"];
+		for(json::iterator it = JtestCases.begin(); it != JtestCases.end(); ++it)
+		{
+			result.testcases.push_back(std::make_pair<string,string>(it->at(0).get<string>(),it->at(1).get<string>()));
+		}
+		return true;
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	return false;
 };
 
 int main(int argc, char* argv[]){
-	for (int i = 0; i<argc; i++)
-        std::cout << argv[i] << std::endl;
+	// for (int i = 0; i<argc; i++)
+    //     std::cout << argv[i] << std::endl;
 
 	string filePath = argv[1];
 
@@ -42,7 +53,7 @@ int main(int argc, char* argv[]){
 	try
 	{
 		i >> j;
-		std::cout << j << std::endl;
+		//std::cout << j << std::endl;
 	}
 	catch(const std::exception& e)
 	{
@@ -52,7 +63,19 @@ int main(int argc, char* argv[]){
 
 	json Level1Test = j["Level 1 Examples"];
 	LevelTestCase level1Case;
-	parseTestCase(Level1Test,level1Case);
-	
+	if(parseTestCase(Level1Test,level1Case)){
+		for(std::pair<string,string> element : level1Case.testcases){
+			UriTemplate uri(std::get<0>(element));
+			if(std::get<1>(element) == uri.expand(level1Case.variables)){
+				std::cout << "pass" ;
+			}else{
+				std::cout << "failed" ;
+			}
+			std::cout << std::endl;
+		}
+	}
+
+
+
     return 0;
 }
