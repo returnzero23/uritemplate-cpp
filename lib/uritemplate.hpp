@@ -13,32 +13,39 @@ enum VarSpecType {
     Exploded
 };
 
+enum Operator{
+	Null,
+	Plus,
+	Dot,
+	Slash,
+	Semi,
+	Question,
+	Ampersand,
+	Hash
+};
+
 struct VarSpec {
     std::string name;
     VarSpecType var_type;
 };
 
-enum Operator{
-    Null,
-    Plus,
-    Dot,
-    Slash,
-    Semi,
-    Question,
-    Ampersand,
-    Hash
-};
-
-struct TemplateComponent{
+class TemplateComponent{
+	enum Type {
+		Literal = 0,
+		VarList,
+	};
+	Type type;
     std::string literal;
     std::pair< Operator, std::vector<VarSpec> >  varList;
 public:
 	TemplateComponent(const std::string inLiteral){
 		literal = inLiteral;
+		type = Literal;
 	};
 
 	TemplateComponent(const std::pair< Operator, std::vector<VarSpec> >  inVarList){
 		varList = inVarList;
+		type = VarList;
 	};
 };
 
@@ -147,16 +154,17 @@ public:
 				continue;
 			}
 
-			if(in_varlist && *ch == '{'){
+			if(!in_varlist && *ch == '{'){
 				if( buf.size() > 0 ){
 					components.push_back(TemplateComponent(buf));
 					buf.clear();
 				}
-				components.push_back(parse_varlist(buf));
 				buf.clear();
-				in_varlist = false;
+				in_varlist = true;
 				continue;
 			}
+
+			buf.push_back(*ch);
 		}
 
 		if( buf.size() > 0 ){
@@ -174,8 +182,21 @@ public:
 		return std::string();
 	}
 private:
-	TemplateComponent parse_varlist(std::string){
-		return TemplateComponent(std::string());
+	TemplateComponent parse_varlist(std::string Src){
+		assert(Src.size() > 0);
+		Operator componentOperator;
+		switch(Src[0]){
+			case '+': componentOperator = Plus; break;
+			case '.': componentOperator = Dot; break;
+			case '/': componentOperator = Slash; break;
+			case ';': componentOperator = Plus; break;
+			case '?': componentOperator = Question; break;
+			case '&': componentOperator = Ampersand; break;
+			case '#': componentOperator = Hash; break;
+			default:  componentOperator = Null;
+		}
+		//todo
+		return TemplateComponent(Src);
 	}
 private:
     std::vector<TemplateComponent> components;
