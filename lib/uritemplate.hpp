@@ -45,9 +45,88 @@ public:
 class TemplateVar{
 public:
 	TemplateVar(const std::string varBuf){
-
+		if(varBuf[0] == '['){
+			list = parseVarVector(varBuf);
+			type = List;
+		}else if(varBuf[0] == '{'){
+			associativeArray = parseVarAssociativeArray(varBuf);
+			type = AssociativeArray;
+		}else{
+			scalar = varBuf;
+			type = Scalar;
+		}
 	};
 private:
+	std::vector<std::string> parseVarVector(std::string inBuf){
+		using string = std::string;
+		std::vector<string> result;
+		bool in_varlist = false;
+		string buf;
+		for(string::iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
+		{
+			if(in_varlist && *ch == '"'){
+				in_varlist = false;
+				if( buf.size() > 0 )
+					result.push_back(buf);
+				buf.clear();
+				continue;
+			}
+
+			if(!in_varlist && *ch == '"'){
+				buf.push_back(*ch);
+				in_varlist = true;
+				buf.push_back(*ch);
+				continue;
+			}
+		}
+		return result;
+	}
+
+	std::vector< std::pair< std::string, std::string > > parseVarAssociativeArray(std::string inBuf){
+		using string = std::string;
+		std::vector<std::pair< std::string, std::string > > result;
+		bool in_varlist = false;
+		bool isKey = true;
+		string buf;
+		string key, value;
+		for(string::iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
+		{
+			if(in_varlist && *ch == '"'){
+				in_varlist = false;
+				if( buf.size() > 0 ){
+					if(isKey){
+						key = buf;
+						isKey = false;
+					}else{
+						value = buf;
+						isKey = true;
+						result.push_back(std::pair<string,string>(key,value));
+						key.clear();
+						value.clear();
+					}
+				}
+				buf.clear();
+				continue;
+			}
+
+			if(!in_varlist && *ch == '"'){
+				buf.push_back(*ch);
+				in_varlist = true;
+				buf.push_back(*ch);
+				continue;
+			}
+		}
+		return std::vector< std::pair< std::string, std::string > >();
+	}
+	
+private:
+	enum Type {
+		Null = -1,
+		Scalar,
+		List,
+		AssociativeArray,
+	};
+	Type type;
     std::string scalar;
     std::vector<std::string> list;
     std::vector< std::pair< std::string, std::string > > associativeArray;
