@@ -173,19 +173,20 @@ public:
 	};
 
 	std::string expand(std::map<std::string,std::string> inVars){
-		//vars = inVars;
+		//todo
 		return std::string();
 	};
 
 	std::string expand(std::string key, std::string val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
+		//todo
 		return std::string();
 	}
 private:
-	TemplateComponent parse_varlist(std::string Src){
-		assert(Src.size() > 0);
+	TemplateComponent parse_varlist(std::string src){
+		assert(src.size() > 0);
 		Operator componentOperator;
-		switch(Src[0]){
+		switch(src[0]){
 			case '+': componentOperator = Plus; break;
 			case '.': componentOperator = Dot; break;
 			case '/': componentOperator = Slash; break;
@@ -195,9 +196,42 @@ private:
 			case '#': componentOperator = Hash; break;
 			default:  componentOperator = Null;
 		}
-		//todo
-		return TemplateComponent(Src);
-	}
+		if(componentOperator != Null){
+			src = src.substr(1);
+		}
+		std::vector<std::string> stringList;
+		if(string2vector(src,",",stringList)){
+			for(auto& ele : stringList)
+			{				
+				if(src.size() > 2 && src[-1] == '*'){
+					//todo
+				}
+
+				if(src.find(':') != std::string::npos){
+					//todo
+				}
+				//todo
+			}
+		}
+		return TemplateComponent(src);
+	};
+
+	bool string2vector(const std::string& srcString, const std::string& splitChar, std::vector<std::string>& result){
+		std::string::size_type pos1, pos2;
+		pos2 = srcString.find(splitChar);
+		pos1 = 0;
+		while(std::string::npos != pos2)
+		{
+			result.push_back(srcString.substr(pos1, pos2-pos1));
+		
+			pos1 = pos2 + splitChar.size();
+			pos2 = srcString.find(splitChar, pos1);
+		}
+		if(pos1 != srcString.length())
+			result.push_back(srcString.substr(pos1));
+
+		return result.size() > 0;
+	};
 private:
     std::vector<TemplateComponent> components;
     std::map<std::string,TemplateVar> vars;
