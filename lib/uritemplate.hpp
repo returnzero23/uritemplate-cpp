@@ -5,6 +5,9 @@
 #include <vector>
 #include <map>
 
+//dev
+#include <stdio.h>
+
 namespace uritemplatecpp{
 
 enum VarSpecType {
@@ -27,6 +30,13 @@ enum Operator{
 struct VarSpec {
     std::string name;
     VarSpecType var_type;
+	unsigned int size;
+public:
+	VarSpec(std::string name,VarSpecType type,unsigned int size = 0):
+		name(name),
+		var_type(type),
+		size(size)
+	{}
 };
 
 class TemplateComponent{
@@ -52,16 +62,17 @@ public:
 class TemplateVar{
 public:
 	TemplateVar(const std::string varBuf){
-		if(varBuf[0] == '['){
-			list = parseVarVector(varBuf);
-			type = List;
-		}else if(varBuf[0] == '{'){
-			associativeArray = parseVarAssociativeArray(varBuf);
-			type = AssociativeArray;
-		}else{
-			scalar = varBuf;
-			type = Scalar;
-		}
+		// if(varBuf[0] == '['){
+		// 	list = parseVarVector(varBuf);
+		// 	type = List;
+		// }else if(varBuf[0] == '{'){
+		// 	associativeArray = parseVarAssociativeArray(varBuf);
+		// 	type = AssociativeArray;
+		// }else{
+		// 	scalar = varBuf;
+		// 	type = Scalar;
+		// }
+		// 内部解析 还是 外部解析？
 	};
 private:
 	std::vector<std::string> parseVarVector(std::string inBuf){
@@ -123,7 +134,7 @@ private:
 				continue;
 			}
 		}
-		return std::vector< std::pair< std::string, std::string > >();
+		return result;
 	}
 	
 private:
@@ -200,20 +211,26 @@ private:
 			src = src.substr(1);
 		}
 		std::vector<std::string> stringList;
+		std::vector<VarSpec> specList;
 		if(string2vector(src,",",stringList)){
 			for(auto& ele : stringList)
 			{				
-				if(src.size() > 2 && src[-1] == '*'){
-					//todo
+				if(ele.size() > 2 && ele[-1] == '*'){
+					std::cout << ele << "with *" << std::endl;
+					specList.push_back(VarSpec(ele.substr(0, ele.size() - 1),Exploded));
+				}else if(ele.find(':') != std::string::npos){
+					std::string::size_type pos = ele.find(':');
+					unsigned int size;
+					std::cout << ele << std::endl;
+					sscanf(ele.substr(pos+1).c_str(),"%d",&size);
+					std::cout << ele.substr(0, pos) << std::endl;
+					specList.push_back(VarSpec(ele.substr(0, pos),Prefixed,size));
+				}else{
+					specList.push_back(VarSpec(ele,Raw,0));
 				}
-
-				if(src.find(':') != std::string::npos){
-					//todo
-				}
-				//todo
 			}
 		}
-		return TemplateComponent(src);
+		return TemplateComponent(std::pair< Operator, std::vector<VarSpec> >(componentOperator,specList));
 	};
 
 	bool string2vector(const std::string& srcString, const std::string& splitChar, std::vector<std::string>& result){
@@ -223,7 +240,6 @@ private:
 		while(std::string::npos != pos2)
 		{
 			result.push_back(srcString.substr(pos1, pos2-pos1));
-		
 			pos1 = pos2 + splitChar.size();
 			pos2 = srcString.find(splitChar, pos1);
 		}
