@@ -11,12 +11,12 @@ using UriTemplate = uritemplatecpp::UriTemplate;
 
 class LevelTestCase{
 public:
-	void setVectorVariables(const std::vector<std::string>& vars){
-
+	void setVectorVariables(const std::string key, const std::vector<std::string>& vars){
+		variables.insert(std::pair<std::string,VarType>(key,VarType(vars)));
 	};
 
-	void setMapVariables(const std::map<std::string, std::string>& vars){
-
+	void setMapVariables(const std::string key, const std::map<std::string, std::string>& vars){
+		variables.insert(std::pair<std::string,VarType>(key,VarType(vars)));
 	};
 public:
 	struct VarType{
@@ -46,6 +46,8 @@ public:
 	};
 	uint level;
 	std::map<std::string,VarType> variables;
+	std::map<std::string,std::string> variablesString;
+
 	std::vector< std::pair<string,string> > testcases;
 };
 
@@ -58,13 +60,15 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 		json Jvariables = parseJson["variables"];
 		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
 		{
-			if(it.value().is_array()){
-				//todo
-			}else if(it.value().is_object()){
-				//todo
-			}else{
-				result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
-			}
+			// if(it.value().is_array()){
+			// 	//todo
+			// }else if(it.value().is_object()){
+			// 	//todo
+			// }else{
+			// 	result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
+			// }
+			std::cout << it.value().dump() << std::endl;
+			result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().dump())));
 		}
 
 		json JtestCases = parseJson["testcases"];
@@ -112,12 +116,31 @@ int main(int argc, char* argv[]){
 	if(parseTestCase(Level1Test,level1Case)){
 		for(std::pair<string,string> element : level1Case.testcases){
 			UriTemplate uri(std::get<0>(element));
-			if(std::get<1>(element) == uri.expand(level1Case.variables)){
-				std::cout << "pass" ;
-			}else{
-				std::cout << "failed" ;
+
+			for(auto& ele : level1Case.variables){
+				if(ele.second.type == LevelTestCase::VarType::Vec){
+					if(std::get<1>(element) == uri.expand(ele.first, ele.second.vecVars)){
+						std::cout << "pass" ;
+					}else{
+						std::cout << "failed" ;
+					}
+					std::cout << std::endl;
+				}else if (ele.second.type == LevelTestCase::VarType::Map){
+					if(std::get<1>(element) == uri.expand(ele.second.mapVars)){
+						std::cout << "pass" ;
+					}else{
+						std::cout << "failed" ;
+					}
+					std::cout << std::endl;
+				}else{
+					if(std::get<1>(element) == uri.expand(ele.first, ele.second.scalarVar)){
+						std::cout << "pass" ;
+					}else{
+						std::cout << "failed" ;
+					}
+					std::cout << std::endl;
+				}
 			}
-			std::cout << std::endl;
 		}
 	}
 
