@@ -9,9 +9,43 @@ using json = nlohmann::json;
 using std::string;
 using UriTemplate = uritemplatecpp::UriTemplate;
 
-struct LevelTestCase{
+class LevelTestCase{
+public:
+	void setVectorVariables(const std::vector<std::string>& vars){
+
+	};
+
+	void setMapVariables(const std::map<std::string, std::string>& vars){
+
+	};
+public:
+	struct VarType{
+		enum Type {
+			Null = -1,
+			Scalar,
+			Vec,
+			Map,
+		};
+		Type type;
+		std::map<std::string, std::string> mapVars;
+		std::vector<std::string> vecVars;
+		std::string scalarVar;
+	public:
+		VarType(const std::map<std::string, std::string>& var){
+			type = Map;
+			mapVars = var;
+		};
+		VarType(const std::vector< std::string > var){
+			type = Vec;
+			vecVars = var;
+		};
+		VarType(const std::string var){
+			type = Scalar;
+			scalarVar = var;
+		}
+	};
 	uint level;
-	std::map<std::string,std::string> variables;
+	std::map<std::string,VarType> variables;
 	std::vector< std::pair<string,string> > testcases;
 };
 
@@ -29,7 +63,7 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 			}else if(it.value().is_object()){
 				//todo
 			}else{
-				result.variables.insert(std::pair<string,string>(it.key(),it.value().get<string>()));
+				result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
 			}
 		}
 
