@@ -62,18 +62,27 @@ public:
 class TemplateVar{
 public:
 	TemplateVar(const std::string varBuf){
-		// if(varBuf[0] == '['){
-		// 	list = parseVarVector(varBuf);
-		// 	type = List;
-		// }else if(varBuf[0] == '{'){
-		// 	associativeArray = parseVarAssociativeArray(varBuf);
-		// 	type = AssociativeArray;
-		// }else{
-		// 	scalar = varBuf;
-		// 	type = Scalar;
-		// }
-		// 内部解析 还是 外部解析？
+		if(varBuf[0] == '['){
+			list = parseVarVector(varBuf);
+			type = List;
+		}else if(varBuf[0] == '{'){
+			associativeArray = parseVarAssociativeArray(varBuf);
+			type = AssociativeArray;
+		}else{
+			scalar = varBuf;
+			type = Scalar;
+		}
 	};
+
+	TemplateVar(const std::vector<std::string> vecVars){
+		list = vecVars;
+		type = List;
+	};
+
+	TemplateVar(const std::vector< std::pair< std::string, std::string > > mapVars){
+		associativeArray = mapVars;
+		type = AssociativeArray;
+	}
 private:
 	std::vector<std::string> parseVarVector(std::string inBuf){
 		using string = std::string;
@@ -144,7 +153,7 @@ private:
 		List,
 		AssociativeArray,
 	};
-	Type type;
+	Type type = Null;
     std::string scalar;
     std::vector<std::string> list;
     std::vector< std::pair< std::string, std::string > > associativeArray;
@@ -183,16 +192,26 @@ public:
 		}
 	};
 
-	std::string expand(std::map<std::string,std::string> inVars){
+	std::string expand(const std::string key, const std::vector<std::string> inVars){
 		//todo
 		return std::string();
 	};
 
-	std::string expand(std::string key, std::string val){
+	std::string expand(const std::map<std::string,std::string> inVars){
+		//todo
+		return std::string();
+	};
+
+	std::string expand(const std::string key, std::string val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
 		//todo
 		return std::string();
-	}
+	};
+
+	std::string expand(const std::string varSrc){
+		//todo
+		return std::string();
+	};
 private:
 	TemplateComponent parse_varlist(std::string src){
 		assert(src.size() > 0);
