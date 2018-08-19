@@ -24,13 +24,25 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 		json Jvariables = parseJson["variables"];
 		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
 		{
-			result.variables.insert(std::pair<string,string>(it.key(),it.value().get<string>()));
+			if(it.value().is_array()){
+				//todo
+			}else if(it.value().is_object()){
+				//todo
+			}else{
+				result.variables.insert(std::pair<string,string>(it.key(),it.value().get<string>()));
+			}
 		}
 
 		json JtestCases = parseJson["testcases"];
 		for(json::iterator it = JtestCases.begin(); it != JtestCases.end(); ++it)
 		{
-			result.testcases.push_back(std::make_pair<string,string>(it->at(0).get<string>(),it->at(1).get<string>()));
+			if(it->at(1).is_array()){
+				//std::cout << "array" << std::endl;
+				//todo
+			}else{
+				std::cout << "string" << std::endl;
+				result.testcases.push_back(std::make_pair<string,string>(it->at(0).get<string>(),it->at(1).get<string>()));
+			}
 		}
 		return true;
 	}
@@ -61,7 +73,7 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	json Level1Test = j["Level 1 Examples"];
+	json Level1Test = j["Level 4 Examples"];
 	LevelTestCase level1Case;
 	if(parseTestCase(Level1Test,level1Case)){
 		for(std::pair<string,string> element : level1Case.testcases){
