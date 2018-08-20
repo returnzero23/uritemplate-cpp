@@ -67,7 +67,6 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 			// }else{
 			// 	result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
 			// }
-			std::cout << it.value().dump() << std::endl;
 			result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().dump())));
 		}
 
@@ -78,7 +77,6 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 				//std::cout << "array" << std::endl;
 				//todo
 			}else{
-				std::cout << "string" << std::endl;
 				result.testcases.push_back(std::make_pair<string,string>(it->at(0).get<string>(),it->at(1).get<string>()));
 			}
 		}
@@ -111,7 +109,7 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	json Level1Test = j["Level 4 Examples"];
+	json Level1Test = j["Level 1 Examples"];
 	LevelTestCase level1Case;
 	if(parseTestCase(Level1Test,level1Case)){
 		for(std::pair<string,string> element : level1Case.testcases){
@@ -133,7 +131,7 @@ int main(int argc, char* argv[]){
 					}
 					std::cout << std::endl;
 				}else{
-					if(std::get<1>(element) == uri.expand(ele.first, ele.second.scalarVar)){
+ 					if(std::get<1>(element) == uri.expand(ele.first, ele.second.scalarVar.substr(1,ele.second.scalarVar.size()-2))){
 						std::cout << "pass" ;
 					}else{
 						std::cout << "failed" ;
