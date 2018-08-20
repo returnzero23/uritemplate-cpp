@@ -5,9 +5,6 @@
 #include <vector>
 #include <map>
 
-//dev
-#include <stdio.h>
-
 namespace uritemplatecpp{
 
 enum VarSpecType {
@@ -39,15 +36,97 @@ public:
 	{}
 };
 
-class TemplateComponent{
-	enum Type {
-		Literal = 0,
-		VarList,
-	};
-	Type type;
-    std::string literal;
-    std::pair< Operator, std::vector<VarSpec> >  varList;
-public:
+const std::string UNRESERVED[] = {
+   "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+   "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
+   "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+   "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
+   "%20", "%21", "%22", "%23", "%24", "%25", "%26", "%27",
+   "%28", "%29", "%2A", "%2B", "%2C", "-", ".", "%2F",
+   "0", "1", "2", "3", "4", "5", "6", "7",
+   "8", "9", "%3A", "%3B", "%3C", "%3D", "%3E", "%3F",
+   "%40", "A", "B", "C", "D", "E", "F", "G",
+   "H", "I", "J", "K", "L", "M", "N", "O",
+   "P", "Q", "R", "S", "T", "U", "V", "W",
+   "X", "Y", "Z", "%5B", "%5C", "%5D", "%5E", "_",
+   "%60", "a", "b", "c", "d", "e", "f", "g",
+   "h", "i", "j", "k", "l", "m", "n", "o",
+   "p", "q", "r", "s", "t", "u", "v", "w",
+   "x", "y", "z", "%7B", "%7C", "%7D", "~", "%7F",
+   "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+   "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
+   "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+   "%98", "%99", "%9A", "%9B", "%9C", "%9D", "%9E", "%9F",
+   "%A0", "%A1", "%A2", "%A3", "%A4", "%A5", "%A6", "%A7",
+   "%A8", "%A9", "%AA", "%AB", "%AC", "%AD", "%AE", "%AF",
+   "%B0", "%B1", "%B2", "%B3", "%B4", "%B5", "%B6", "%B7",
+   "%B8", "%B9", "%BA", "%BB", "%BC", "%BD", "%BE", "%BF",
+   "%C0", "%C1", "%C2", "%C3", "%C4", "%C5", "%C6", "%C7",
+   "%C8", "%C9", "%CA", "%CB", "%CC", "%CD", "%CE", "%CF",
+   "%D0", "%D1", "%D2", "%D3", "%D4", "%D5", "%D6", "%D7",
+   "%D8", "%D9", "%DA", "%DB", "%DC", "%DD", "%DE", "%DF",
+   "%E0", "%E1", "%E2", "%E3", "%E4", "%E5", "%E6", "%E7",
+   "%E8", "%E9", "%EA", "%EB", "%EC", "%ED", "%EE", "%EF",
+   "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7",
+   "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
+};
+
+const std::string RESERVED[] = {
+   "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+   "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
+   "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+   "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
+   "%20", "!", "%22", "#", "$", "%25", "&", "'",
+   "(", ")", "*", "+", ",", "-", ".", "/",
+   "0", "1", "2", "3", "4", "5", "6", "7",
+   "8", "9", ":", ";", "%3C", "=", "%3E", "?",
+   "@", "A", "B", "C", "D", "E", "F", "G",
+   "H", "I", "J", "K", "L", "M", "N", "O",
+   "P", "Q", "R", "S", "T", "U", "V", "W",
+   "X", "Y", "Z", "[", "%5C", "]", "%5E", "_",
+   "%60", "a", "b", "c", "d", "e", "f", "g",
+   "h", "i", "j", "k", "l", "m", "n", "o",
+   "p", "q", "r", "s", "t", "u", "v", "w",
+   "x", "y", "z", "%7B", "%7C", "%7D", "~", "%7F",
+   "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+   "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
+   "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+   "%98", "%99", "%9A", "%9B", "%9C", "%9D", "%9E", "%9F",
+   "%A0", "%A1", "%A2", "%A3", "%A4", "%A5", "%A6", "%A7",
+   "%A8", "%A9", "%AA", "%AB", "%AC", "%AD", "%AE", "%AF",
+   "%B0", "%B1", "%B2", "%B3", "%B4", "%B5", "%B6", "%B7",
+   "%B8", "%B9", "%BA", "%BB", "%BC", "%BD", "%BE", "%BF",
+   "%C0", "%C1", "%C2", "%C3", "%C4", "%C5", "%C6", "%C7",
+   "%C8", "%C9", "%CA", "%CB", "%CC", "%CD", "%CE", "%CF",
+   "%D0", "%D1", "%D2", "%D3", "%D4", "%D5", "%D6", "%D7",
+   "%D8", "%D9", "%DA", "%DB", "%DC", "%DD", "%DE", "%DF",
+   "%E0", "%E1", "%E2", "%E3", "%E4", "%E5", "%E6", "%E7",
+   "%E8", "%E9", "%EA", "%EB", "%EC", "%ED", "%EE", "%EF",
+   "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7",
+   "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
+};
+
+std::string encode_unreserved(std::string encodeStr){
+	std::vector<std::string> vecStr;
+	vecStr.resize(encodeStr.size());
+	for (int i = 0; i < encodeStr.size(); i++){
+		vecStr[i] = UNRESERVED[(int)encodeStr[i]];
+	}
+	std::string result;
+	
+	for(auto& ele : vecStr)
+	{
+		result += ele; 
+	}
+
+	return result;
+}
+
+std::string encode_reserved(const std::string encodeStr){
+	return std::string();
+}
+
+struct TemplateComponent{
 	TemplateComponent(const std::string inLiteral){
 		literal = inLiteral;
 		type = Literal;
@@ -57,6 +136,14 @@ public:
 		varList = inVarList;
 		type = VarList;
 	};
+
+	enum Type {
+		Literal = 0,
+		VarList,
+	};
+	Type type;
+    std::string literal;
+    std::pair< Operator, std::vector<VarSpec> >  varList;
 };
 
 class TemplateVar{
@@ -145,8 +232,7 @@ private:
 		}
 		return result;
 	}
-	
-private:
+public:
 	enum Type {
 		Null = -1,
 		Scalar,
@@ -204,8 +290,16 @@ public:
 
 	std::string expand(const std::string key, std::string val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
-		//todo
-		return std::string();
+		std::string result;
+
+		for(auto& ele : components)
+		{
+			switch(ele.type){
+				case TemplateComponent::Literal: result = encode_reserved(ele.literal);break;
+				case TemplateComponent::VarList: result = build_varlist(ele.varList);break;
+			}
+		}
+		return result;
 	};
 
 	std::string expand(const std::string varSrc){
@@ -235,14 +329,11 @@ private:
 			for(auto& ele : stringList)
 			{				
 				if(ele.size() > 2 && ele[-1] == '*'){
-					std::cout << ele << "with *" << std::endl;
 					specList.push_back(VarSpec(ele.substr(0, ele.size() - 1),Exploded));
 				}else if(ele.find(':') != std::string::npos){
 					std::string::size_type pos = ele.find(':');
 					unsigned int size;
-					std::cout << ele << std::endl;
 					sscanf(ele.substr(pos+1).c_str(),"%d",&size);
-					std::cout << ele.substr(0, pos) << std::endl;
 					specList.push_back(VarSpec(ele.substr(0, pos),Prefixed,size));
 				}else{
 					specList.push_back(VarSpec(ele,Raw,0));
@@ -266,6 +357,40 @@ private:
 			result.push_back(srcString.substr(pos1));
 
 		return result.size() > 0;
+	};
+
+	std::string encode_reserved(const std::string& str){
+		for(auto& achar : str){
+
+		}
+		return str;
+	};
+
+	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> > varList){
+		switch(varList.first){
+			case Null:break;
+			case Plus:break;
+			case Dot:break;
+			case Slash:break;
+			case Semi:break;
+			case Question:break;
+			case Ampersand:break;
+			case Hash:break;
+			default:;
+		}
+		std::string result;
+		for(auto varSpec : varList.second){
+			switch(varSpec.var_type){
+				case Prefixed:break;
+				case Exploded:break;
+				case Raw:break;
+				default:;
+			}
+			if(vars.find(varSpec.name) != vars.end()){
+				result += encode_unreserved(vars.at(varSpec.name).scalar);
+			}
+		}
+		return result;
 	};
 private:
     std::vector<TemplateComponent> components;
