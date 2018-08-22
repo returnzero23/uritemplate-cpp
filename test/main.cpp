@@ -109,36 +109,46 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	json Level1Test = j["Level 1 Examples"];
+	json Level1Test = j["Level 2 Examples"];
 	LevelTestCase level1Case;
 	if(parseTestCase(Level1Test,level1Case)){
 		for(std::pair<string,string> element : level1Case.testcases){
 			UriTemplate uri(std::get<0>(element));
-
+			std::map<std::string,std::string> varMap;
 			for(auto& ele : level1Case.variables){
-				if(ele.second.type == LevelTestCase::VarType::Vec){
-					if(std::get<1>(element) == uri.expand(ele.first, ele.second.vecVars)){
-						std::cout << "pass" ;
-					}else{
-						std::cout << "failed" ;
-					}
-					std::cout << std::endl;
-				}else if (ele.second.type == LevelTestCase::VarType::Map){
-					if(std::get<1>(element) == uri.expand(ele.second.mapVars)){
-						std::cout << "pass" ;
-					}else{
-						std::cout << "failed" ;
-					}
-					std::cout << std::endl;
-				}else{
- 					if(std::get<1>(element) == uri.expand(ele.first, ele.second.scalarVar.substr(1,ele.second.scalarVar.size()-2))){
-						std::cout << "pass" ;
-					}else{
-						std::cout << "failed" ;
-					}
-					std::cout << std::endl;
-				}
+				varMap.insert(std::pair<std::string,std::string>(ele.first,ele.second.scalarVar.substr(1,ele.second.scalarVar.size()-2)));
 			}
+			if(std::get<1>(element) == uri.expand(varMap)){
+				std::cout << "pass" ;
+			}else{
+				std::cout << "failed" ;
+			}
+			std::cout << std::endl;
+
+			// for(auto& ele : level1Case.variables){
+			// 	if(ele.second.type == LevelTestCase::VarType::Vec){
+			// 		if(std::get<1>(element) == uri.expand(ele.first, ele.second.vecVars)){
+			// 			std::cout << "pass" ;
+			// 		}else{
+			// 			std::cout << "failed" ;
+			// 		}
+			// 		std::cout << std::endl;
+			// 	}else if (ele.second.type == LevelTestCase::VarType::Map){
+			// 		if(std::get<1>(element) == uri.expand(ele.second.mapVars)){
+			// 			std::cout << "pass" ;
+			// 		}else{
+			// 			std::cout << "failed" ;
+			// 		}
+			// 		std::cout << std::endl;
+			// 	}else{
+ 			// 		if(std::get<1>(element) == uri.expand(ele.first, ele.second.scalarVar.substr(1,ele.second.scalarVar.size()-2))){
+			// 			std::cout << "pass" ;
+			// 		}else{
+			// 			std::cout << "failed" ;
+			// 		}
+			// 		std::cout << std::endl;
+			// 	}
+			// }
 		}
 	}
 
