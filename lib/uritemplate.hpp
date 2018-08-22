@@ -118,12 +118,22 @@ std::string encode_unreserved(std::string encodeStr){
 	{
 		result += ele; 
 	}
-
 	return result;
 }
 
 std::string encode_reserved(const std::string encodeStr){
-	return std::string();
+	std::vector<std::string> vecStr;
+	vecStr.resize(encodeStr.size());
+	for (int i = 0; i < encodeStr.size(); i++){
+		vecStr[i] = RESERVED[(int)encodeStr[i]];
+	}
+	std::string result;
+	
+	for(auto& ele : vecStr)
+	{
+		result += ele; 
+	}
+	return result;
 }
 
 struct TemplateComponent{
@@ -284,8 +294,22 @@ public:
 	};
 
 	std::string expand(const std::map<std::string,std::string> inVars){
-		//todo
-		return std::string();
+		for(auto& ele : inVars)
+		{
+			//std::cout << ele.first << ":" << ele.second << std::endl;
+			vars.insert(std::pair<std::string,TemplateVar>(ele.first,TemplateVar(ele.second)));
+		}
+		
+		std::string result;
+		for(auto& ele : components)
+		{
+			switch(ele.type){
+				case TemplateComponent::Literal: result = encode_reserved(ele.literal);break;
+				case TemplateComponent::VarList: result = build_varlist(ele.varList);break;
+			}
+		}
+		std::cout << result << std::endl;
+		return result;
 	};
 
 	std::string expand(const std::string key, std::string val){
@@ -367,27 +391,74 @@ private:
 	};
 
 	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> > varList){
+		struct BuildSpecParm {
+			std::string varspec;
+			std::string sep;
+			bool named;
+			std::string ifemp;
+			bool encode_reserved;
+		BuildSpecParm(std::string varspec, std::string sep,	bool named,	std::string ifemp, bool encode_reserved):
+			varspec(varspec),
+			sep(sep),
+			named(named),
+			ifemp(ifemp),
+			encode_reserved(encode_reserved)
+			{};
+
+		BuildSpecParm(){
+		};
+
+		};
+		BuildSpecParm buildSpecParm;
 		switch(varList.first){
-			case Null:break;
-			case Plus:break;
-			case Dot:break;
-			case Slash:break;
-			case Semi:break;
-			case Question:break;
-			case Ampersand:break;
-			case Hash:break;
+			case Null:
+				buildSpecParm = BuildSpecParm("",",",false,"",false);
+			break;
+			case Plus:
+				buildSpecParm = BuildSpecParm("",",",false,"",true);
+			break;
+			case Dot:
+				buildSpecParm = BuildSpecParm(".",".",false,"",false);
+			break;
+			case Slash:
+				buildSpecParm = BuildSpecParm("/","/",false,"",false);
+			break;
+			case Semi:
+				buildSpecParm = BuildSpecParm(";",";",false,"",false);
+			break;
+			case Question:
+				buildSpecParm = BuildSpecParm("?","&",false,"=",false);
+			break;
+			case Ampersand:
+				buildSpecParm = BuildSpecParm("&","&",false,"=",false);
+			break;
+			case Hash:
+				buildSpecParm = BuildSpecParm("#",",",false,"",true);
+			break;
 			default:;
 		}
 		std::string result;
 		for(auto varSpec : varList.second){
+			bool isPrefixed = false;
+			bool isExploded = false;
 			switch(varSpec.var_type){
-				case Prefixed:break;
-				case Exploded:break;
+				case Prefixed: isPrefixed = true; break;
+				case Exploded: isExploded = true; break;
 				case Raw:break;
 				default:;
-			}
+			};
 			if(vars.find(varSpec.name) != vars.end()){
-				result += encode_unreserved(vars.at(varSpec.name).scalar);
+				std::string fixedString;
+				if(isPrefixed){
+					vars.at(varSpec.name).scalar.resize(varSpec.size);
+				}
+				fixedString = vars.at(varSpec.name).scalar;
+				if(isExploded){
+					result += encode_reserved(fixedString);
+				}else{
+					result += encode_unreserved(fixedString);
+				}
+				std::cout << isExploded << result << std::endl;
 			}
 		}
 		return result;
