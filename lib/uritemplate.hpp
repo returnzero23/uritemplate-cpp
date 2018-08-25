@@ -180,6 +180,11 @@ public:
 		associativeArray = mapVars;
 		type = AssociativeArray;
 	}
+
+	TemplateVar():
+		type(Null)
+	{};
+	
 private:
 	std::vector<std::string> parseVarVector(std::string inBuf){
 		using string = std::string;
@@ -383,22 +388,127 @@ private:
 		return result.size() > 0;
 	};
 
-	std::string encode_reserved(const std::string& str){
-		for(auto& achar : str){
+	// std::string encode_reserved(const std::string& str){
+	// 	for(auto& achar : str){
 
+	// 	}
+	// 	return str;
+	// };
+
+	std::vector<std::string> encode_vec(std::vector<std::string> list,const bool allow_resered){
+		std::vector<std::string> res;
+		for(auto& ele : list)
+		{
+			res.push_back(allow_resered?encode_reserved(ele):encode_unreserved(ele));
 		}
-		return str;
+		return res;
+	};
+
+	std::string build_varspec(VarSpec varSpec,std::string seq, bool named, std::string ifemp, bool allow_reserved){
+		std::string res;
+
+		TemplateVar findVar;
+		if(vars.find(varSpec.name) != vars.end()){
+			findVar = vars.at(varSpec.name);		
+			// std::string fixedString;
+			// if(isPrefixed){
+			// 	vars.at(varSpec.name).scalar.resize(varSpec.size);
+			// }
+			// fixedString = vars.at(varSpec.name).scalar;
+			// if(isExploded){
+			// 	result += encode_reserved(fixedString);
+			// }else{
+			// 	result += encode_unreserved(fixedString);
+			// }
+			// std::cout << isExploded << result << std::endl;
+		}
+		
+		switch (findVar.type)
+		{
+			case TemplateVar::Scalar:
+				if(named){
+					res += allow_reserved?encode_reserved(varSpec.name):encode_unreserved(varSpec.name);
+					if(findVar.scalar == ""){
+						res += ifemp;
+					}
+					res += "=";
+				}
+				switch(varSpec.var_type){
+					case Prefixed:{
+						std::string fixedstr = findVar.scalar.substr(0,varSpec.size);
+						res += allow_reserved?encode_reserved(fixedstr):encode_unreserved(fixedstr);
+					}
+					break;
+					case Raw:;
+					case Exploded:
+						res += allow_reserved?encode_reserved(findVar.scalar):encode_unreserved(findVar.scalar);
+						break;
+					;
+					default:;
+				}
+				break;
+			case TemplateVar::List:
+				if(findVar.list.size() == 0) return "";
+				
+				switch (varSpec.var_type)
+				{
+					case Exploded:
+						if(named){
+							for(auto ele : findVar.list){
+
+							}
+						}else{
+
+						}
+						break;
+					case Raw:
+					case Prefixed:
+						{
+							if(named){
+								res += allow_reserved?encode_reserved(varSpec.name):encode_unreserved(varSpec.name);
+								std::string joinStr;
+								for(std::string ele : findVar.list){
+									joinStr += ele;
+								}
+								if(joinStr.size() == 0){
+									res += ifemp;
+									return res;
+								}
+								res += "=";
+							}
+
+							std::vector<std::string> tempList = encode_vec(findVar.list,allow_reserved);
+							for(auto ele : tempList)
+							{
+								res += ele;
+								res += ",";
+							}
+							res.pop_back();
+						}
+						break;
+					default:
+						break;
+				}
+				break;
+			case TemplateVar::AssociativeArray:
+				/* code */
+				break;
+		
+			default:
+				break;
+		}
+		return res;
 	};
 
 	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> > varList){
 		struct BuildSpecParm {
-			std::string varspec;
+			std::string first;
 			std::string sep;
 			bool named;
 			std::string ifemp;
 			bool encode_reserved;
-		BuildSpecParm(std::string varspec, std::string sep,	bool named,	std::string ifemp, bool encode_reserved):
-			varspec(varspec),
+		BuildSpecParm(std::string first, std::string sep,	bool named,	std::string ifemp, bool encode_reserved):
+			first(first),
 			sep(sep),
 			named(named),
 			ifemp(ifemp),
@@ -437,30 +547,36 @@ private:
 			break;
 			default:;
 		}
-		std::string result;
+		std::vector<std::string> values;
 		for(auto varSpec : varList.second){
-			bool isPrefixed = false;
-			bool isExploded = false;
-			switch(varSpec.var_type){
-				case Prefixed: isPrefixed = true; break;
-				case Exploded: isExploded = true; break;
-				case Raw:break;
-				default:;
-			};
-			if(vars.find(varSpec.name) != vars.end()){
-				std::string fixedString;
-				if(isPrefixed){
-					vars.at(varSpec.name).scalar.resize(varSpec.size);
-				}
-				fixedString = vars.at(varSpec.name).scalar;
-				if(isExploded){
-					result += encode_reserved(fixedString);
-				}else{
-					result += encode_unreserved(fixedString);
-				}
-				std::cout << isExploded << result << std::endl;
-			}
+			values.push_back(build_varspec(varSpec,buildSpecParm.sep,buildSpecParm.named,buildSpecParm.ifemp,buildSpecParm.encode_reserved));
+			// bool isPrefixed = false;
+			// bool isExploded = false;
+			// switch(varSpec.var_type){
+			// 	case Prefixed: isPrefixed = true; break;
+			// 	case Exploded: isExploded = true; break;
+			// 	case Raw:break;
+			// 	default:;
+			// };
+			// if(vars.find(varSpec.name) != vars.end()){
+			// 	std::string fixedString;
+			// 	if(isPrefixed){
+			// 		vars.at(varSpec.name).scalar.resize(varSpec.size);
+			// 	}
+			// 	fixedString = vars.at(varSpec.name).scalar;
+			// 	if(isExploded){
+			// 		result += encode_reserved(fixedString);
+			// 	}else{
+			// 		result += encode_unreserved(fixedString);
+			// 	}
+			// 	std::cout << isExploded << result << std::endl;
+			// }
 		}
+		std::string result = buildSpecParm.first;
+		for(std::string ele : values){
+			result += ele;
+		}
+
 		return result;
 	};
 private:
