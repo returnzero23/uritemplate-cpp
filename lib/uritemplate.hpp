@@ -309,11 +309,14 @@ public:
 		for(auto& ele : components)
 		{
 			switch(ele.type){
-				case TemplateComponent::Literal: result = encode_reserved(ele.literal);break;
-				case TemplateComponent::VarList: result = build_varlist(ele.varList);break;
+				case TemplateComponent::Literal:
+					result += encode_reserved(ele.literal);
+					break;
+				case TemplateComponent::VarList:
+					result += build_varlist(ele.varList);
+					break;
 			}
 		}
-		std::cout << result << std::endl;
 		return result;
 	};
 
@@ -388,13 +391,6 @@ private:
 		return result.size() > 0;
 	};
 
-	// std::string encode_reserved(const std::string& str){
-	// 	for(auto& achar : str){
-
-	// 	}
-	// 	return str;
-	// };
-
 	std::vector<std::string> encode_vec(std::vector<std::string> list,const bool allow_resered){
 		std::vector<std::string> res;
 		for(auto& ele : list)
@@ -404,12 +400,12 @@ private:
 		return res;
 	};
 
-	std::string build_varspec(VarSpec varSpec,std::string seq, bool named, std::string ifemp, bool allow_reserved){
+	std::string build_varspec(VarSpec varSpec,std::string sep, bool named, std::string ifemp, bool allow_reserved){
 		std::string res;
 
 		TemplateVar findVar;
 		if(vars.find(varSpec.name) != vars.end()){
-			findVar = vars.at(varSpec.name);		
+			findVar = vars.at(varSpec.name);	
 			// std::string fixedString;
 			// if(isPrefixed){
 			// 	vars.at(varSpec.name).scalar.resize(varSpec.size);
@@ -427,7 +423,7 @@ private:
 		{
 			case TemplateVar::Scalar:
 				if(named){
-					res += allow_reserved?encode_reserved(varSpec.name):encode_unreserved(varSpec.name);
+					res += encode_reserved(varSpec.name);
 					if(findVar.scalar == ""){
 						res += ifemp;
 					}
@@ -454,18 +450,37 @@ private:
 				{
 					case Exploded:
 						if(named){
+							std::vector<std::string> pairs;
 							for(auto ele : findVar.list){
-
+								std::string encodeStr = encode_reserved(varSpec.name);
+								if(ele.size() == 0 ){
+									pairs.push_back(encodeStr + ifemp);
+								}else{
+									std::string encodeVal = allow_reserved?encode_reserved(ele):encode_unreserved(ele);
+									pairs.push_back(encodeStr + "=" + encodeVal);
+								}
 							}
+							for(auto ele : pairs)
+							{
+								res += ele;
+								res += sep;
+							}
+							res.pop_back();
 						}else{
-
+							std::vector<std::string> tempList = encode_vec(findVar.list,allow_reserved);
+							for(auto ele : tempList)
+							{
+								res += ele;
+								res += sep;
+							}
+							res.pop_back();
 						}
 						break;
 					case Raw:
 					case Prefixed:
 						{
 							if(named){
-								res += allow_reserved?encode_reserved(varSpec.name):encode_unreserved(varSpec.name);
+								res += encode_reserved(varSpec.name);
 								std::string joinStr;
 								for(std::string ele : findVar.list){
 									joinStr += ele;
@@ -491,7 +506,69 @@ private:
 				}
 				break;
 			case TemplateVar::AssociativeArray:
-				/* code */
+				if (findVar.associativeArray.size() == 0) return "";
+				switch (varSpec.var_type)
+				{
+					case Exploded:
+						if(named){
+							std::vector<std::string> pairs;
+							for(auto ele : findVar.associativeArray){
+								std::string encodeKey = encode_reserved(ele.first);
+								if(ele.second.size() == 0 ){
+									pairs.push_back(encodeKey + ifemp);
+								}else{
+									std::string encodeVal = allow_reserved?encode_reserved(ele.second):encode_unreserved(ele.second);
+									pairs.push_back(encodeKey + "=" + encodeVal);
+								}								
+							}
+							for(auto ele : pairs)
+							{
+								res += ele;
+								res += sep;
+							}
+							res.pop_back();
+						}else{
+							std::vector<std::string> pairs;
+							for(auto ele : findVar.associativeArray){
+								std::string encodeKey = encode_reserved(ele.first);
+								std::string encodeVal = allow_reserved?encode_reserved(ele.second):encode_unreserved(ele.second);
+								pairs.push_back(encodeKey + "=" + encodeVal);						
+							}
+							for(auto ele : pairs)
+							{
+								res += ele;
+								res += sep;
+							}
+							res.pop_back();
+						}
+						break;
+					case Raw:
+					case Prefixed:
+						{
+							if(named){
+								res += allow_reserved?encode_reserved(varSpec.name):encode_unreserved(varSpec.name);
+								res += "=";
+							}
+
+							std::vector<std::string> pairs;
+							for(auto& ele : findVar.associativeArray){
+								std::string encodeKey = encode_reserved(ele.first);
+								std::string encodeVal = allow_reserved?encode_reserved(ele.second):encode_unreserved(ele.second);
+								pairs.push_back(encodeKey + "," + encodeVal);	
+							}
+
+							std::vector<std::string> tempList = encode_vec(findVar.list,allow_reserved);
+							for(auto ele : tempList)
+							{
+								res += ele;
+								res += ",";
+							}
+							res.pop_back();
+						}
+						break;
+					default:
+						break;
+				}
 				break;
 		
 			default:
@@ -550,33 +627,11 @@ private:
 		std::vector<std::string> values;
 		for(auto varSpec : varList.second){
 			values.push_back(build_varspec(varSpec,buildSpecParm.sep,buildSpecParm.named,buildSpecParm.ifemp,buildSpecParm.encode_reserved));
-			// bool isPrefixed = false;
-			// bool isExploded = false;
-			// switch(varSpec.var_type){
-			// 	case Prefixed: isPrefixed = true; break;
-			// 	case Exploded: isExploded = true; break;
-			// 	case Raw:break;
-			// 	default:;
-			// };
-			// if(vars.find(varSpec.name) != vars.end()){
-			// 	std::string fixedString;
-			// 	if(isPrefixed){
-			// 		vars.at(varSpec.name).scalar.resize(varSpec.size);
-			// 	}
-			// 	fixedString = vars.at(varSpec.name).scalar;
-			// 	if(isExploded){
-			// 		result += encode_reserved(fixedString);
-			// 	}else{
-			// 		result += encode_unreserved(fixedString);
-			// 	}
-			// 	std::cout << isExploded << result << std::endl;
-			// }
 		}
 		std::string result = buildSpecParm.first;
 		for(std::string ele : values){
 			result += ele;
 		}
-
 		return result;
 	};
 private:
