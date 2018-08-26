@@ -1,0 +1,1 @@
+sudo g++ test/main.cpp -std=c++11 -I ./ext/json/include -o ./build/test
