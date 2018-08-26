@@ -176,7 +176,7 @@ public:
 		type = List;
 	};
 
-	TemplateVar(const std::vector< std::pair< std::string, std::string > > mapVars){
+	TemplateVar(const std::map< std::string, std::string > mapVars){
 		associativeArray = mapVars;
 		type = AssociativeArray;
 	}
@@ -211,9 +211,9 @@ private:
 		return result;
 	}
 
-	std::vector< std::pair< std::string, std::string > > parseVarAssociativeArray(std::string inBuf){
+	std::map< std::string, std::string > parseVarAssociativeArray(std::string inBuf){
 		using string = std::string;
-		std::vector<std::pair< std::string, std::string > > result;
+		std::map< std::string, std::string > result;
 		bool in_varlist = false;
 		bool isKey = true;
 		string buf;
@@ -229,7 +229,7 @@ private:
 					}else{
 						value = buf;
 						isKey = true;
-						result.push_back(std::pair<string,string>(key,value));
+						result.insert(std::pair<string,string>(key,value));
 						key.clear();
 						value.clear();
 					}
@@ -257,7 +257,7 @@ public:
 	Type type = Null;
     std::string scalar;
     std::vector<std::string> list;
-    std::vector< std::pair< std::string, std::string > > associativeArray;
+    std::map< std::string, std::string > associativeArray;
 };
 
 class UriTemplate{
@@ -292,17 +292,7 @@ public:
 		}
 	};
 
-	std::string expand(const std::string key, const std::vector<std::string> inVars){
-		//todo
-		return std::string();
-	};
-
-	std::string expand(const std::map<std::string,std::string> inVars){
-		for(auto& ele : inVars)
-		{
-			vars.insert(std::pair<std::string,TemplateVar>(ele.first,TemplateVar(ele.second)));
-		}
-		
+	std::string build(){
 		std::string result;
 		for(auto& ele : components)
 		{
@@ -318,23 +308,27 @@ public:
 		return result;
 	};
 
-	std::string expand(const std::string key, std::string val){
-		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
-		std::string result;
-
-		for(auto& ele : components)
-		{
-			switch(ele.type){
-				case TemplateComponent::Literal: result = encode_reserved(ele.literal);break;
-				case TemplateComponent::VarList: result = build_varlist(ele.varList);break;
-			}
-		}
-		return result;
+	void set(const std::string key, const std::vector<std::string> inVars){
+		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(inVars)));
 	};
 
-	std::string expand(const std::string varSrc){
+	void set(const std::string key, const std::map<std::string,std::string> inVars){
+		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(inVars)));
+	};
+
+	void set(const std::map<std::string,std::string> inVars){
+		for(auto& ele : inVars)
+		{
+			vars.insert(std::pair<std::string,TemplateVar>(ele.first,TemplateVar(ele.second)));
+		}
+	};
+
+	void set(const std::string key, std::string val){
+		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
+	};
+
+	void set(const std::string varSrc){
 		//todo
-		return std::string();
 	};
 private:
 	TemplateComponent parse_varlist(std::string src){
@@ -358,7 +352,7 @@ private:
 		if(string2vector(src,",",stringList)){
 			for(auto& ele : stringList)
 			{
-				if(ele.size() > 2 && ele[-1] == '*'){
+				if(ele.size() > 2 && ele[ele.size()-1] == '*'){
 					specList.push_back(VarSpec(ele.substr(0, ele.size() - 1),Exploded));
 				}else if(ele.find(':') != std::string::npos){
 					std::string::size_type pos = ele.find(':');
@@ -542,11 +536,11 @@ private:
 							for(auto& ele : findVar.associativeArray){
 								std::string encodeKey = encode_reserved(ele.first);
 								std::string encodeVal = allow_reserved?encode_reserved(ele.second):encode_unreserved(ele.second);
+								
 								pairs.push_back(encodeKey + "," + encodeVal);	
 							}
 
-							std::vector<std::string> tempList = encode_vec(findVar.list,allow_reserved);
-							for(auto ele : tempList)
+							for(auto ele : pairs)
 							{
 								res += ele;
 								res += ",";
