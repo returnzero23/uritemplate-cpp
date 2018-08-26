@@ -284,7 +284,6 @@ public:
 				in_varlist = true;
 				continue;
 			}
-
 			buf.push_back(*ch);
 		}
 
@@ -301,7 +300,6 @@ public:
 	std::string expand(const std::map<std::string,std::string> inVars){
 		for(auto& ele : inVars)
 		{
-			//std::cout << ele.first << ":" << ele.second << std::endl;
 			vars.insert(std::pair<std::string,TemplateVar>(ele.first,TemplateVar(ele.second)));
 		}
 		
@@ -346,7 +344,7 @@ private:
 			case '+': componentOperator = Plus; break;
 			case '.': componentOperator = Dot; break;
 			case '/': componentOperator = Slash; break;
-			case ';': componentOperator = Plus; break;
+			case ';': componentOperator = Semi; break;
 			case '?': componentOperator = Question; break;
 			case '&': componentOperator = Ampersand; break;
 			case '#': componentOperator = Hash; break;
@@ -359,7 +357,7 @@ private:
 		std::vector<VarSpec> specList;
 		if(string2vector(src,",",stringList)){
 			for(auto& ele : stringList)
-			{				
+			{
 				if(ele.size() > 2 && ele[-1] == '*'){
 					specList.push_back(VarSpec(ele.substr(0, ele.size() - 1),Exploded));
 				}else if(ele.find(':') != std::string::npos){
@@ -405,18 +403,7 @@ private:
 
 		TemplateVar findVar;
 		if(vars.find(varSpec.name) != vars.end()){
-			findVar = vars.at(varSpec.name);	
-			// std::string fixedString;
-			// if(isPrefixed){
-			// 	vars.at(varSpec.name).scalar.resize(varSpec.size);
-			// }
-			// fixedString = vars.at(varSpec.name).scalar;
-			// if(isExploded){
-			// 	result += encode_reserved(fixedString);
-			// }else{
-			// 	result += encode_unreserved(fixedString);
-			// }
-			// std::cout << isExploded << result << std::endl;
+			findVar = vars.at(varSpec.name);
 		}
 		
 		switch (findVar.type)
@@ -426,6 +413,7 @@ private:
 					res += encode_reserved(varSpec.name);
 					if(findVar.scalar == ""){
 						res += ifemp;
+						return res;
 					}
 					res += "=";
 				}
@@ -611,13 +599,13 @@ private:
 				buildSpecParm = BuildSpecParm("/","/",false,"",false);
 			break;
 			case Semi:
-				buildSpecParm = BuildSpecParm(";",";",false,"",false);
+				buildSpecParm = BuildSpecParm(";",";",true,"",false);
 			break;
 			case Question:
-				buildSpecParm = BuildSpecParm("?","&",false,"=",false);
+				buildSpecParm = BuildSpecParm("?","&",true,"=",false);
 			break;
 			case Ampersand:
-				buildSpecParm = BuildSpecParm("&","&",false,"=",false);
+				buildSpecParm = BuildSpecParm("&","&",true,"=",false);
 			break;
 			case Hash:
 				buildSpecParm = BuildSpecParm("#",",",false,"",true);
@@ -631,7 +619,9 @@ private:
 		std::string result = buildSpecParm.first;
 		for(std::string ele : values){
 			result += ele;
+			result += buildSpecParm.sep;
 		}
+		result.pop_back();
 		return result;
 	};
 private:
