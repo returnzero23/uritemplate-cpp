@@ -106,7 +106,7 @@ const std::string RESERVED[] = {
    "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
 };
 
-std::string encode_unreserved(std::string encodeStr){
+std::string encode_unreserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
 	for (int i = 0; i < encodeStr.size(); i++){
@@ -121,7 +121,7 @@ std::string encode_unreserved(std::string encodeStr){
 	return result;
 }
 
-std::string encode_reserved(const std::string encodeStr){
+std::string encode_reserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
 	for (int i = 0; i < encodeStr.size(); i++){
@@ -137,7 +137,7 @@ std::string encode_reserved(const std::string encodeStr){
 }
 
 struct TemplateComponent{
-	TemplateComponent(const std::string inLiteral){
+	TemplateComponent(const std::string& inLiteral){
 		literal = inLiteral;
 		type = Literal;
 	};
@@ -158,7 +158,7 @@ struct TemplateComponent{
 
 class TemplateVar{
 public:
-	TemplateVar(const std::string varBuf){
+	TemplateVar(const std::string& varBuf){
 		if(varBuf[0] == '['){
 			list = parseVarVector(varBuf);
 			type = List;
@@ -171,12 +171,12 @@ public:
 		}
 	};
 
-	TemplateVar(const std::vector<std::string> vecVars){
+	TemplateVar(const std::vector<std::string>& vecVars){
 		list = vecVars;
 		type = List;
 	};
 
-	TemplateVar(const std::map< std::string, std::string > mapVars){
+	TemplateVar(const std::map< std::string, std::string >& mapVars){
 		associativeArray = mapVars;
 		type = AssociativeArray;
 	}
@@ -186,12 +186,12 @@ public:
 	{};
 	
 private:
-	std::vector<std::string> parseVarVector(std::string inBuf){
+	std::vector<std::string> parseVarVector(const std::string& inBuf){
 		using string = std::string;
 		std::vector<string> result;
 		bool in_varlist = false;
 		string buf;
-		for(string::iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
+		for(string::const_iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
 		{
 			if(in_varlist && *ch == '"'){
 				in_varlist = false;
@@ -211,14 +211,14 @@ private:
 		return result;
 	}
 
-	std::map< std::string, std::string > parseVarAssociativeArray(std::string inBuf){
+	std::map< std::string, std::string > parseVarAssociativeArray(const std::string& inBuf){
 		using string = std::string;
 		std::map< std::string, std::string > result;
 		bool in_varlist = false;
 		bool isKey = true;
 		string buf;
 		string key, value;
-		for(string::iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
+		for(string::const_iterator ch = inBuf.begin() + 1; ch != inBuf.end(); ch++)
 		{
 			if(in_varlist && *ch == '"'){
 				in_varlist = false;
@@ -262,11 +262,11 @@ public:
 
 class UriTemplate{
 public:
-	UriTemplate(std::string src_template){
+	UriTemplate(const std::string& src_template){
 		using string = std::string;
 		bool in_varlist = false;
 		string buf;
-		for(string::iterator ch = src_template.begin(); ch != src_template.end(); ch++)
+		for(string::const_iterator ch = src_template.begin(); ch != src_template.end(); ch++)
 		{
 			if(in_varlist && *ch == '}'){
 				components.push_back(parse_varlist(buf));
@@ -308,33 +308,34 @@ public:
 		return result;
 	};
 
-	void set(const std::string key, const std::vector<std::string> inVars){
+	void set(const std::string& key, const std::vector<std::string>& inVars){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(inVars)));
 	};
 
-	void set(const std::string key, const std::map<std::string,std::string> inVars){
+	void set(const std::string& key, const std::map<std::string,std::string>& inVars){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(inVars)));
 	};
 
-	void set(const std::map<std::string,std::string> inVars){
+	void set(const std::map<std::string,std::string>& inVars){
 		for(auto& ele : inVars)
 		{
 			vars.insert(std::pair<std::string,TemplateVar>(ele.first,TemplateVar(ele.second)));
 		}
 	};
 
-	void set(const std::string key, std::string val){
+	void set(const std::string& key, std::string& val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
 	};
 
-	void set(const std::string varSrc){
+	void set(const std::string& varSrc){
 		//todo
 	};
 private:
-	TemplateComponent parse_varlist(std::string src){
-		assert(src.size() > 0);
+	TemplateComponent parse_varlist(const std::string& src){
+		std::string tempSrc = src;
+		assert(tempSrc.size() > 0);
 		Operator componentOperator;
-		switch(src[0]){
+		switch(tempSrc[0]){
 			case '+': componentOperator = Plus; break;
 			case '.': componentOperator = Dot; break;
 			case '/': componentOperator = Slash; break;
@@ -345,11 +346,11 @@ private:
 			default:  componentOperator = Null;
 		}
 		if(componentOperator != Null){
-			src = src.substr(1);
+			tempSrc = tempSrc.substr(1);
 		}
 		std::vector<std::string> stringList;
 		std::vector<VarSpec> specList;
-		if(string2vector(src,",",stringList)){
+		if(string2vector(tempSrc,",",stringList)){
 			for(auto& ele : stringList)
 			{
 				if(ele.size() > 2 && ele[ele.size()-1] == '*'){
@@ -383,7 +384,7 @@ private:
 		return result.size() > 0;
 	};
 
-	std::vector<std::string> encode_vec(std::vector<std::string> list,const bool allow_resered){
+	std::vector<std::string> encode_vec(const std::vector<std::string>& list,const bool allow_resered){
 		std::vector<std::string> res;
 		for(auto& ele : list)
 		{
@@ -392,7 +393,7 @@ private:
 		return res;
 	};
 
-	std::string build_varspec(VarSpec varSpec,std::string sep, bool named, std::string ifemp, bool allow_reserved){
+	std::string build_varspec(const VarSpec& varSpec,const std::string& sep, const bool named, const std::string& ifemp,const bool allow_reserved){
 		std::string res;
 
 		TemplateVar findVar;
@@ -559,7 +560,7 @@ private:
 		return res;
 	};
 
-	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> > varList){
+	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> >& varList){
 		struct BuildSpecParm {
 			std::string first;
 			std::string sep;
