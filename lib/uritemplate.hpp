@@ -324,7 +324,7 @@ public:
 		}
 	};
 
-	void set(const std::string& key, std::string& val){
+	void set(const std::string& key, const std::string& val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
 	};
 
