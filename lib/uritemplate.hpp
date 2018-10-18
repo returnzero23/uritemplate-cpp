@@ -1,6 +1,7 @@
 #ifndef URITEMPLATECPP_H
 #define URITEMPLATECPP_H
 
+#include <cassert>
 #include <string>
 #include <vector>
 #include <map>
