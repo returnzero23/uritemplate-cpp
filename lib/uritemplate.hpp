@@ -1,6 +1,7 @@
 #ifndef URITEMPLATECPP_H
 #define URITEMPLATECPP_H
 
+#include <cassert>
 #include <string>
 #include <vector>
 #include <map>
@@ -323,7 +324,7 @@ public:
 		}
 	};
 
-	void set(const std::string& key, std::string& val){
+	void set(const std::string& key, const std::string& val){
 		vars.insert(std::pair<std::string,TemplateVar>(key,TemplateVar(val)));
 	};
 
