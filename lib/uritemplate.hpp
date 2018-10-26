@@ -143,7 +143,7 @@ struct TemplateComponent{
 		type = Literal;
 	};
 
-	TemplateComponent(const std::pair< Operator, std::vector<VarSpec> >  inVarList){
+	TemplateComponent(const std::pair<Operator, std::vector<VarSpec> >  inVarList){
 		varList = inVarList;
 		type = VarList;
 	};
@@ -154,7 +154,7 @@ struct TemplateComponent{
 	};
 	Type type;
     std::string literal;
-    std::pair< Operator, std::vector<VarSpec> >  varList;
+    std::pair<Operator, std::vector<VarSpec> >  varList;
 };
 
 class TemplateVar{
@@ -177,7 +177,7 @@ public:
 		type = List;
 	};
 
-	TemplateVar(const std::map< std::string, std::string >& mapVars){
+	TemplateVar(const std::map<std::string, std::string>& mapVars){
 		associativeArray = mapVars;
 		type = AssociativeArray;
 	}
@@ -212,9 +212,9 @@ private:
 		return result;
 	}
 
-	std::map< std::string, std::string > parseVarAssociativeArray(const std::string& inBuf){
+	std::map<std::string, std::string> parseVarAssociativeArray(const std::string& inBuf){
 		using string = std::string;
-		std::map< std::string, std::string > result;
+		std::map<std::string, std::string> result;
 		bool in_varlist = false;
 		bool isKey = true;
 		string buf;
@@ -258,7 +258,7 @@ public:
 	Type type = Null;
     std::string scalar;
     std::vector<std::string> list;
-    std::map< std::string, std::string > associativeArray;
+    std::map<std::string, std::string> associativeArray;
 };
 
 class UriTemplate{
@@ -366,7 +366,7 @@ private:
 				}
 			}
 		}
-		return TemplateComponent(std::pair< Operator, std::vector<VarSpec> >(componentOperator,specList));
+		return TemplateComponent(std::pair<Operator, std::vector<VarSpec> >(componentOperator,specList));
 	};
 
 	bool string2vector(const std::string& srcString, const std::string& splitChar, std::vector<std::string>& result){
@@ -561,7 +561,7 @@ private:
 		return res;
 	};
 
-	std::string build_varlist(const  std::pair< Operator, std::vector<VarSpec> >& varList){
+	std::string build_varlist(const std::pair<Operator, std::vector<VarSpec> >& varList){
 		struct BuildSpecParm {
 			std::string first;
 			std::string sep;
