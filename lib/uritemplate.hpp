@@ -614,8 +614,10 @@ private:
 		}
 		std::string result = buildSpecParm.first;
 		for(std::string ele : values){
-			result += ele;
-			result += buildSpecParm.sep;
+			if(!ele.empty()){
+				result += ele;
+				result += buildSpecParm.sep;
+			}
 		}
 		result.pop_back();
 		return result;
