@@ -110,8 +110,8 @@ const std::string RESERVED[] = {
 std::string encode_unreserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
-	for (int i = 0; i < encodeStr.size(); i++){
-		vecStr[i] = UNRESERVED[(int)encodeStr[i]];
+	for (size_t i = 0; i < encodeStr.size(); i++){
+		vecStr[i] = UNRESERVED[static_cast<uint8_t>(encodeStr[i])];
 	}
 	std::string result;
 	
@@ -125,8 +125,8 @@ std::string encode_unreserved(const std::string& encodeStr){
 std::string encode_reserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
-	for (int i = 0; i < encodeStr.size(); i++){
-		vecStr[i] = RESERVED[(int)encodeStr[i]];
+	for (size_t i = 0; i < encodeStr.size(); i++){
+		vecStr[i] = RESERVED[static_cast<uint8_t>(encodeStr[i])];
 	}
 	std::string result;
 	
