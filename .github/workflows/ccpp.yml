@@ -1,0 +1,13 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: build
+      run: g++ test/main.cpp -std=c++11 -I ./ext/json/include -o ./build/test
