@@ -107,7 +107,7 @@ const std::string RESERVED[] = {
    "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
 };
 
-std::string encode_unreserved(const std::string& encodeStr){
+inline std::string encode_unreserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
 	for (size_t i = 0; i < encodeStr.size(); i++){
@@ -122,7 +122,7 @@ std::string encode_unreserved(const std::string& encodeStr){
 	return result;
 }
 
-std::string encode_reserved(const std::string& encodeStr){
+inline std::string encode_reserved(const std::string& encodeStr){
 	std::vector<std::string> vecStr;
 	vecStr.resize(encodeStr.size());
 	for (size_t i = 0; i < encodeStr.size(); i++){
