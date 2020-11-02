@@ -619,7 +619,9 @@ private:
 				result += buildSpecParm.sep;
 			}
 		}
-		result.pop_back();
+		if(!result.empty()){
+			result.pop_back();
+		}
 		return result;
 	};
 private:
