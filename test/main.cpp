@@ -55,8 +55,6 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 	
 	try
 	{
-		result.level = parseJson["level"];
-
 		json Jvariables = parseJson["variables"];
 		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
 		{
