@@ -116,12 +116,9 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	for(int i = 1; i < 5; i++){
-		char str[10];
-		sprintf(str,"%d",i);
-		std::string LevelStr = "Level " + string(str) + " Examples";
-		std::cout << "test " << LevelStr << std::endl;
-		json Level1Test = j[LevelStr];
+	for (json::iterator it = j.begin(); it != j.end(); ++it) {
+		std::cout << "Run test \"" << it.key() << "\"\n";
+		json Level1Test = j[it.key()];
 		LevelTestCase level1Case;
 		if(parseTestCase(Level1Test,level1Case)){
 			for(std::pair<string,std::vector<string> > element : level1Case.testcases){
