@@ -58,7 +58,10 @@ bool parseTestCase(const json& parseJson, TestCase& result){
 		json Jvariables = parseJson["variables"];
 		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
 		{
-			if(it.value().is_array()){
+			if(it.value().is_null()){
+				// null means undefined, therefore no variable to "define" here
+				continue;
+			}else if(it.value().is_array()){
 				std::vector<std::string> listStr;
 				for(json::iterator it2 = it->begin(); it2 != it->end(); ++it2)
 				{
