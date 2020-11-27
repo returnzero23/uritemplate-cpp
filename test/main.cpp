@@ -9,7 +9,7 @@ using json = nlohmann::json;
 using std::string;
 using UriTemplate = uritemplatecpp::UriTemplate;
 
-class LevelTestCase{
+class TestCase{
 public:
 	void setVectorVariables(const std::string key, const std::vector<std::string>& vars){
 		variables.insert(std::pair<std::string,VarType>(key,VarType(vars)));
@@ -51,7 +51,7 @@ public:
 	std::vector< std::pair<std::string,std::vector<std::string> > > testcases;
 };
 
-bool parseTestCase(const json& parseJson, LevelTestCase& result){
+bool parseTestCase(const json& parseJson, TestCase& result){
 	
 	try
 	{
@@ -73,7 +73,7 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 				}
 				result.setMapVariables(it.key(),mapStr);
 			}else{
-				result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
+				result.variables.insert(std::pair<string,TestCase::VarType>(it.key(),TestCase::VarType(it.value().get<string>())));
 			}
 		}
 
@@ -118,23 +118,23 @@ int main(int argc, char* argv[]){
 
 	for (json::iterator it = j.begin(); it != j.end(); ++it) {
 		std::cout << "Run test \"" << it.key() << "\"\n";
-		json Level1Test = j[it.key()];
-		LevelTestCase level1Case;
-		if(parseTestCase(Level1Test,level1Case)){
-			for(std::pair<string,std::vector<string> > element : level1Case.testcases){
+		json testData = j[it.key()];
+		TestCase testCase;
+		if(parseTestCase(testData,testCase)){
+			for(std::pair<string,std::vector<string> > element : testCase.testcases){
 				UriTemplate uri(std::get<0>(element));
 				std::map<std::string,std::string> varMap;
-				for(auto& ele : level1Case.variables){
+				for(auto& ele : testCase.variables){
 					
 					switch (ele.second.type)
 					{
-						case LevelTestCase::VarType::Type::Scalar:
+						case TestCase::VarType::Type::Scalar:
 							uri.set(ele.first,ele.second.scalarVar);
 							break;
-						case LevelTestCase::VarType::Type::Map:
+						case TestCase::VarType::Type::Map:
 							uri.set(ele.first,ele.second.mapVars);
 							break;
-						case LevelTestCase::VarType::Type::Vec:
+						case TestCase::VarType::Type::Vec:
 							uri.set(ele.first,ele.second.vecVars);
 							break;
 					
