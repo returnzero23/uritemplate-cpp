@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "../lib/uritemplate.hpp"
 #include "../ext/json/include/nlohmann/json.hpp"
@@ -75,6 +76,10 @@ bool parseTestCase(const json& parseJson, TestCase& result){
 					mapStr.insert(std::pair<std::string,std::string>(it2.key(),it2.value().get<std::string>()));
 				}
 				result.setMapVariables(it.key(),mapStr);
+			}else if(it.value().is_number()){
+				std::ostringstream number;
+				number << it.value().get<double>();
+				result.variables.insert(std::pair<string, TestCase::VarType>(it.key(), TestCase::VarType(number.str())));
 			}else{
 				result.variables.insert(std::pair<string,TestCase::VarType>(it.key(),TestCase::VarType(it.value().get<string>())));
 			}
