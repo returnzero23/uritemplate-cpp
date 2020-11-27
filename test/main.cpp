@@ -119,6 +119,7 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
+	bool testFailed{false};
 	for (json::iterator it = j.begin(); it != j.end(); ++it) {
 		std::cout << "Run test \"" << it.key() << "\"\n";
 		json testData = j[it.key()];
@@ -156,18 +157,28 @@ int main(int argc, char* argv[]){
 				}
 				
 				if(pass){
-					std::cout << "pass" ;
+					std::cout << "." ;
 				}else{
-					std::cout << "failed" ;
+					testFailed = true;
+					std::cout << std::endl;
+					auto testcaseName = std::get<0>(element);
+					std::cout << "\n\tFAILURE in testcase \""<< testcaseName << "\"\n"
+						      << "\t\tActual \t\"" << result << "\", but expected:\n";
+					for(auto& ele : std::get<1>(element)){
+						std::cout << "\t\t\t\"" << ele << "\"\n";
+					}
+					std::cout << std::endl;
 				}
-				std::cout << std::endl;
 			}
 		}
+		std::cout << std::endl;
 	}
-
 	
-
-
+	if(testFailed){
+		std::cout << "FAILED" << std::endl;
+	}else{
+		std::cout << "OK" << std::endl;
+	}
 
     return 0;
 }
