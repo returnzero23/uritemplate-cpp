@@ -406,7 +406,12 @@ private:
 		{
 			case TemplateVar::Scalar:
 				if(named){
-					res += encode_reserved(varSpec.name);
+					// res += encode_reserved(varSpec.name);
+					// fix: Additional Examples 1
+					// FAILURE in testcase "/lookup{?Stra%C3%9Fe}"
+                	// Actual  "/lookup?Stra%25C3%259Fe=Gr%C3%BCner%20Weg", but expected:
+                	//         "/lookup?Stra%C3%9Fe=Gr%C3%BCner%20Weg"
+					res += varSpec.name;
 					if(findVar.scalar == ""){
 						res += ifemp;
 						return res;
