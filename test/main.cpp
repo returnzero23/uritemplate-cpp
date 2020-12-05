@@ -1,6 +1,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "../lib/uritemplate.hpp"
 #include "../ext/json/include/nlohmann/json.hpp"
@@ -9,7 +10,7 @@ using json = nlohmann::json;
 using std::string;
 using UriTemplate = uritemplatecpp::UriTemplate;
 
-class LevelTestCase{
+class TestCase{
 public:
 	void setVectorVariables(const std::string key, const std::vector<std::string>& vars){
 		variables.insert(std::pair<std::string,VarType>(key,VarType(vars)));
@@ -51,16 +52,17 @@ public:
 	std::vector< std::pair<std::string,std::vector<std::string> > > testcases;
 };
 
-bool parseTestCase(const json& parseJson, LevelTestCase& result){
+bool parseTestCase(const json& parseJson, TestCase& result){
 	
 	try
 	{
-		result.level = parseJson["level"];
-
 		json Jvariables = parseJson["variables"];
 		for(json::iterator it = Jvariables.begin(); it != Jvariables.end(); ++it)
 		{
-			if(it.value().is_array()){
+			if(it.value().is_null()){
+				// null means undefined, therefore no variable to "define" here
+				continue;
+			}else if(it.value().is_array()){
 				std::vector<std::string> listStr;
 				for(json::iterator it2 = it->begin(); it2 != it->end(); ++it2)
 				{
@@ -74,8 +76,12 @@ bool parseTestCase(const json& parseJson, LevelTestCase& result){
 					mapStr.insert(std::pair<std::string,std::string>(it2.key(),it2.value().get<std::string>()));
 				}
 				result.setMapVariables(it.key(),mapStr);
+			}else if(it.value().is_number()){
+				std::ostringstream number;
+				number << it.value().get<double>();
+				result.variables.insert(std::pair<string, TestCase::VarType>(it.key(), TestCase::VarType(number.str())));
 			}else{
-				result.variables.insert(std::pair<string,LevelTestCase::VarType>(it.key(),LevelTestCase::VarType(it.value().get<string>())));
+				result.variables.insert(std::pair<string,TestCase::VarType>(it.key(),TestCase::VarType(it.value().get<string>())));
 			}
 		}
 
@@ -118,28 +124,26 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 
-	for(int i = 1; i < 5; i++){
-		char str[10];
-		sprintf(str,"%d",i);
-		std::string LevelStr = "Level " + string(str) + " Examples";
-		std::cout << "test " << LevelStr << std::endl;
-		json Level1Test = j[LevelStr];
-		LevelTestCase level1Case;
-		if(parseTestCase(Level1Test,level1Case)){
-			for(std::pair<string,std::vector<string> > element : level1Case.testcases){
+	bool testFailed{false};
+	for (json::iterator it = j.begin(); it != j.end(); ++it) {
+		std::cout << "Run test \"" << it.key() << "\"\n";
+		json testData = j[it.key()];
+		TestCase testCase;
+		if(parseTestCase(testData,testCase)){
+			for(std::pair<string,std::vector<string> > element : testCase.testcases){
 				UriTemplate uri(std::get<0>(element));
 				std::map<std::string,std::string> varMap;
-				for(auto& ele : level1Case.variables){
+				for(auto& ele : testCase.variables){
 					
 					switch (ele.second.type)
 					{
-						case LevelTestCase::VarType::Type::Scalar:
+						case TestCase::VarType::Type::Scalar:
 							uri.set(ele.first,ele.second.scalarVar);
 							break;
-						case LevelTestCase::VarType::Type::Map:
+						case TestCase::VarType::Type::Map:
 							uri.set(ele.first,ele.second.mapVars);
 							break;
-						case LevelTestCase::VarType::Type::Vec:
+						case TestCase::VarType::Type::Vec:
 							uri.set(ele.first,ele.second.vecVars);
 							break;
 					
@@ -158,18 +162,28 @@ int main(int argc, char* argv[]){
 				}
 				
 				if(pass){
-					std::cout << "pass" ;
+					std::cout << "." ;
 				}else{
-					std::cout << "failed" ;
+					testFailed = true;
+					std::cout << std::endl;
+					auto testcaseName = std::get<0>(element);
+					std::cout << "\n\tFAILURE in testcase \""<< testcaseName << "\"\n"
+						      << "\t\tActual \t\"" << result << "\", but expected:\n";
+					for(auto& ele : std::get<1>(element)){
+						std::cout << "\t\t\t\"" << ele << "\"\n";
+					}
+					std::cout << std::endl;
 				}
-				std::cout << std::endl;
 			}
 		}
+		std::cout << std::endl;
 	}
-
 	
-
-
+	if(testFailed){
+		std::cout << "FAILED" << std::endl;
+	}else{
+		std::cout << "OK" << std::endl;
+	}
 
     return 0;
 }
